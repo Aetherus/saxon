@@ -9,6 +9,14 @@ defmodule Saxon.Parsers.TIMESTAMP do
 
   def parse(%__MODULE__{buffer: buffer, attributes: attributes}) do
     buffer = buffer |> to_string() |> String.trim()
+    parse(buffer, attributes)
+  end
+
+  defp parse("", attributes) do
+    {:ok, nil, attributes}
+  end
+
+  defp parse(buffer, attributes) do
     case (buffer |> DateTime.from_iso8601()) do
       {:ok, timestamp, _} ->
         {:ok, timestamp, attributes}

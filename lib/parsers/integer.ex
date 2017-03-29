@@ -9,6 +9,14 @@ defmodule Saxon.Parsers.INTEGER do
 
   def parse(%__MODULE__{buffer: buffer, attributes: attributes}) do
     buffer = buffer |> to_string() |> String.trim()
+    parse(buffer, attributes)
+  end
+
+  defp parse("", attributes) do
+    {:ok, nil, attributes}
+  end
+
+  defp parse(buffer, attributes) do
     try do
       result = buffer |> String.to_integer()
       {:ok, result, attributes}
