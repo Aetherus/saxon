@@ -1,4 +1,5 @@
 defmodule Saxon do
+  require IEx
   @moduledoc """
   `Saxon` is a highly opinionated XML request parser for `Plug`.
   It only supports parsing the HTTP requests whose `Content-Type` is `application/vnd.saxon+xml`.
@@ -52,7 +53,7 @@ defmodule Saxon do
             },
             %{
               "content" => "Lorem ipsum ...",
-              "photo" => %Plug.Conn{filename: "cool.png" content_type: "image/png"}
+              "photo" => %Plug.Upload{filename: "cool.png", content_type: "image/png"}
             }
           ]
         }
@@ -77,12 +78,12 @@ defmodule Saxon do
   }
 
   def parse(conn, "application", "vnd.saxon+xml", _headers, _opts) do
-    :xmerl_sax_parser.stream("",
+    {:ok, params, _} = :xmerl_sax_parser.stream("",
       continuation_state: %{conn: conn, done: false},
       continuation_fun: &read_req_body/1,
       event_state: [],  # the stack
       event_fun: &handle_sax_event/3)
-    {:ok, conn}
+    {:ok, params, conn}
   end
 
   def parse(conn, _, _, _, _) do
