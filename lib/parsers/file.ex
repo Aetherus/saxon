@@ -1,40 +1,49 @@
 defmodule Saxon.Parsers.FILE do
-  use GenServer
-  defstruct [:pid]
+  require IEx
+  use Bitwise
+
+  defstruct fd: nil, path: nil, buffer: "", attributes: %{}
 
   def new(attributes \\ %{}) do
-    {:ok, pid} = GenServer.start_link(__MODULE__, attributes)
-    %__MODULE__{pid: pid}
+    case Plug.Upload.random_file("saxon") do
+      {:ok, path} ->
+        {:ok, fd} = File.open(path, [:write, :binary, :delayed_write, :raw])
+        %__MODULE__{fd: fd, attributes: attributes, path: path}
+      {:too_many_attempts, _, _} -> {:error, :too_many_attempts}
+      other -> other
+    end
   end
 
-  def update(%__MODULE__{pid: pid} = parser, chunk) do
-    GenServer.cast(pid, {:update, chunk})
-    parser
+  def update(%__MODULE__{fd: fd, buffer: buffer} = parser, chunk) do
+    chunk = buffer <> (chunk |> Enum.reject(&(&1 in ' \t\r\n')) |> to_string())
+    chunk_size = byte_size(chunk)
+    t = chunk_size &&& 3
+    h = chunk_size - t
+
+    <<parsible :: binary-size(h),
+      rest     :: binary-size(t)>> = chunk
+
+    try do
+      IO.binwrite(fd, Base.decode64!(parsible))
+      IEx.pry
+      %{parser | buffer: rest}
+    rescue
+      _ -> {:error, :invalid_format}
+    end
   end
 
-  def parse(%__MODULE__{pid: pid}) do
-    GenServer.call(pid, :parse)
-  end
-
-  def init(attributes) do
-    tmp_path = Plug.Upload.random_file!("saxon")
-    fd = File.open!(tmp_path, [:write, :binary])
-    {:ok, %{fd: fd, path: tmp_path, attributes: attributes}}
-  end
-
-  def handle_cast({:update, chunk}, %{fd: fd} = state) do
-    binary = chunk |> to_string() |> Base.decode64!(ignore: :whitespace)
-    IO.binwrite(fd, binary)
-    {:noreply, state}
-  end
-
-  def handle_call(:parse, _from, %{fd: fd, path: path, attributes: attributes} = state) do
+  def parse(%__MODULE__{fd: fd, buffer: "", attributes: attributes, path: path}) do
     File.close(fd)
     uploaded_file = %Plug.Upload{
       path: path,
       filename: to_string(attributes['filename']),
       content_type: to_string(attributes['content-type'])
     }
-    {:stop, :normal, {:ok, uploaded_file, attributes}, state}
+    {:ok, uploaded_file, attributes}
+  end
+
+  def parse(%__MODULE__{fd: fd}) do
+   File.close(fd)
+   {:error, :invalid_format, nil}
   end
 end

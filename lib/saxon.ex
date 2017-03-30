@@ -1,5 +1,4 @@
 defmodule Saxon do
-  require IEx
   @moduledoc """
   `Saxon` is a highly opinionated XML request parser for `Plug`.
   It only supports parsing the HTTP requests whose `Content-Type` is `application/vnd.saxon+xml`.
