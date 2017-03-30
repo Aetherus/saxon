@@ -1,5 +1,4 @@
 defmodule Saxon.Parsers.FILE do
-  require IEx
   use Bitwise
 
   defstruct fd: nil, path: nil, buffer: "", attributes: %{}
@@ -25,7 +24,6 @@ defmodule Saxon.Parsers.FILE do
 
     try do
       IO.binwrite(fd, Base.decode64!(parsible))
-      IEx.pry
       %{parser | buffer: rest}
     rescue
       _ -> {:error, :invalid_format}
