@@ -14,9 +14,6 @@ defmodule Saxon.Reducer do
 
   def start_element(tag, attributes, stack) do
     parser_type = parser_for(tag)
-    if !parser_type do
-      raise ParseError, "Unsupported tag <#{tag}>"
-    end
     [apply(parser_type, :new, [attributes]) | stack]
   end
 
@@ -46,5 +43,7 @@ defmodule Saxon.Reducer do
     defp parser_for(unquote(tag)), do: unquote(:"Elixir.Saxon.Parsers.#{String.upcase(tag)}")
   end
 
-  defp parser_for(_), do: nil
+  defp parser_for(tag) do
+    raise ParseError, "Unsupported tag <#{tag}>"
+  end
 end
