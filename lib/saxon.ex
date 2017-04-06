@@ -66,7 +66,7 @@ defmodule Saxon do
   def parse(conn, supertype, subtype, headers, opts \\ [])
 
   def parse(conn, "application", "vnd.saxon+xml", _headers, opts) do
-    {result, conn} = Sax.start(conn, Reducer, [], chunk_size: opts[:saxon_chunk_size])
+    {result, conn} = Sax.start(conn, Reducer, chunk_size: opts[:saxon_chunk_size])
     {:ok, result, conn}
   end
 

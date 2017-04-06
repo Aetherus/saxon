@@ -14,6 +14,8 @@ defmodule Saxon.Reducer do
     "timestamp" => Parsers.TIMESTAMP
   }
 
+  def init, do: []
+
   def start_document(stack) do
     [Parsers.LIST.new() | stack]
   end

@@ -1,7 +1,24 @@
 defmodule Saxon.Sax do
-  @moduledoc "Simplified SAX parser"
+  @moduledoc """
+  An overly simplified SAX parser, aiming at reducing memory footprint when dealing with large text nodes.
 
-  def start(conn, reducer, state, opts \\ %{}) do
+  Supports **only** the following events:
+
+  *  `:start_document (state)`
+  *  `:end_document (state, conn)`
+  *  `:start_element (element_name, attributes, state)`
+  *  `:end_element (element_name, state)`
+  *  `:characters (chunk, state)`
+
+  Note that the `:ignorableWhitespace` event in xmerl or erlsom will be treated as `:characters`.
+
+  Even if there is only one piece of text in the element, the event `:characters` can be triggered multiple times,
+  each time feeding a HTML entity decoded chunk to the event handler.
+  The sizes of the chunks can diverse hugely, so the handler should not make decision based on the chunk size.
+  """
+
+  def start(conn, reducer, opts \\ %{}) do
+    state = apply(reducer, :init, [])
     state = apply(reducer, :start_document, [state])
     continue(conn, reducer, "", state, opts)
   end
@@ -15,7 +32,7 @@ defmodule Saxon.Sax do
   end
 
   defp parse(<<"</", rest::binary>> = chunk, reducer, conn, state, has_more, opts) do
-    case String.split(rest, ~r/>/, parts: 2) do
+    case String.split(rest, ">", parts: 2) do
       [tag, rest] ->
         state = apply(reducer, :end_element, [tag, state])
         parse(rest, reducer, conn, state, has_more, opts)
@@ -25,7 +42,7 @@ defmodule Saxon.Sax do
   end
 
   defp parse(<<"<", rest::binary>> = chunk, reducer, conn, state, has_more, opts) do
-    case String.split(rest, ~r/\s*>/, parts: 2) do
+    case String.split(rest, ">", parts: 2) do
       [tag, rest] ->
         {tag, attributes} = retrieve_attributes(tag)
         state = apply(reducer, :start_element, [tag, attributes, state])
