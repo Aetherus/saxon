@@ -34,8 +34,8 @@ defmodule Saxon.Parsers.FILE do
     File.close(fd)
     uploaded_file = %Plug.Upload{
       path: path,
-      filename: to_string(attributes['filename']),
-      content_type: to_string(attributes['content-type'])
+      filename: to_string(attributes["filename"]),
+      content_type: to_string(attributes["content-type"])
     }
     {:ok, uploaded_file, attributes}
   end

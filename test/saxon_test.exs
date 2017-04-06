@@ -4,7 +4,7 @@ defmodule SaxonTest do
 
   test "parse" do
     conn = Plug.Test.conn(:post, "/", File.read!("test/fixture.xml"))
-    {:ok, params, _} = Saxon.parse(conn, "application", "vnd.saxon+xml", nil, nil)
+    {:ok, params, conn} = Saxon.parse(conn, "application", "vnd.saxon+xml", nil, nil)
 
     %{
       "article" => %{

@@ -18,7 +18,7 @@ defmodule Saxon.Reducer do
     [Parsers.LIST.new() | stack]
   end
 
-  def end_document(conn, stack) do
+  def end_document(stack, conn) do
     [%Parsers.LIST{buffer: [result]}] = stack
     {result, conn}
   end

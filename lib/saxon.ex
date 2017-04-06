@@ -64,7 +64,7 @@ defmodule Saxon do
   alias Saxon.{Sax, Reducer}
 
   def parse(conn, "application", "vnd.saxon+xml", _headers, _opts) do
-    {conn, result} = Sax.start(conn, Reducer, [], chunk_size: 128)
+    {result, conn} = Sax.start(conn, Reducer, [], chunk_size: 128)
     {:ok, result, conn}
   end
 
