@@ -14,7 +14,7 @@ defmodule Saxon.Sax do
     end
   end
 
-  defp parse("</" <> rest = chunk, reducer, conn, state, has_more, opts) do
+  defp parse(<<"</", rest::binary>> = chunk, reducer, conn, state, has_more, opts) do
     case String.split(rest, ~r/>/, parts: 2) do
       [tag, rest] ->
         state = apply(reducer, :end_element, [tag, state])
@@ -24,7 +24,7 @@ defmodule Saxon.Sax do
     end
   end
 
-  defp parse("<" <> rest = chunk, reducer, conn, state, has_more, opts) do
+  defp parse(<<"<", rest::binary>> = chunk, reducer, conn, state, has_more, opts) do
     case String.split(rest, ~r/\s*>/, parts: 2) do
       [tag, rest] ->
         {tag, attributes} = retrieve_attributes(tag)
@@ -43,7 +43,7 @@ defmodule Saxon.Sax do
     apply(reducer, :end_document, [state, conn])
   end
 
-  defp parse("&" <> _ = chunk, reducer, conn, state, has_more, opts) do
+  defp parse(<<"&", _::binary>> = chunk, reducer, conn, state, has_more, opts) do
     case String.split(chunk, ~r/(?<=;)/, parts: 2) do
       [html_entity, rest] ->
         state = apply(reducer, :characters, [HtmlEntities.decode(html_entity), state])
