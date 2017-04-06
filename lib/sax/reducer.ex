@@ -43,7 +43,7 @@ defmodule Saxon.Reducer do
   end
 
   for tag <- ~w(boolean file float integer list map string timestamp) do
-    defp parser_for(unquote(tag)), do: unquote("Elixir.Saxon.Parsers.#{String.upcase(tag)}" |> String.to_atom)
+    defp parser_for(unquote(tag)), do: unquote(:"Elixir.Saxon.Parsers.#{String.upcase(tag)}")
   end
 
   defp parser_for(_), do: nil
