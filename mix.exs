@@ -29,7 +29,8 @@ defmodule Saxon.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      plug: "~> 1.3"
+      plug: "~> 1.3",
+      html_entities: "~> 0.3"
     ]
   end
 end

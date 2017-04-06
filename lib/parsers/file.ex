@@ -14,7 +14,7 @@ defmodule Saxon.Parsers.FILE do
   end
 
   def update(%__MODULE__{fd: fd, buffer: buffer} = parser, chunk) do
-    chunk = buffer <> (chunk |> Enum.reject(&(&1 in ' \t\r\n')) |> to_string())
+    chunk = buffer <> (chunk |> String.replace(~r/\s/, ""))
     chunk_size = byte_size(chunk)
     t = chunk_size &&& 3
     h = chunk_size - t

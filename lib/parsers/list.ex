@@ -3,6 +3,10 @@ defmodule Saxon.Parsers.LIST do
 
   def new(attributes \\ %{}), do: %__MODULE__{attributes: attributes}
 
+  def update(%__MODULE__{buffer: _} = parser, chunk) when is_binary(chunk) do
+    parser
+  end
+
   def update(%__MODULE__{buffer: buffer} = parser, {chunk, _}) do
     %{parser | buffer: [chunk | buffer]}
   end

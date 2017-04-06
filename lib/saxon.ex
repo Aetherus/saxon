@@ -61,88 +61,15 @@ defmodule Saxon do
 
   @behaviour Plug.Parsers
 
-  import Plug.Conn
-  alias Plug.Parsers.ParseError
-  alias Saxon.Parsers
-
-  @parsers %{
-    'boolean' => Parsers.BOOLEAN,
-    'file' => Parsers.FILE,
-    'float' => Parsers.FLOAT,
-    'integer' => Parsers.INTEGER,
-    'list' => Parsers.LIST,
-    'map' => Parsers.MAP,
-    'string' => Parsers.STRING,
-    'timestamp' => Parsers.TIMESTAMP
-  }
+  alias Saxon.{Sax, Reducer}
 
   def parse(conn, "application", "vnd.saxon+xml", _headers, _opts) do
-    {:ok, params, _} = :xmerl_sax_parser.stream("",
-      continuation_state: %{conn: conn, done: false},
-      continuation_fun: &read_req_body/1,
-      event_state: [],  # the stack
-      event_fun: &handle_sax_event/3)
-    {:ok, params, conn}
+    {conn, result} = Sax.start(conn, Reducer, [], chunk_size: 128)
+    {:ok, result, conn}
   end
 
   def parse(conn, _, _, _, _) do
     {:next, conn}
   end
 
-  defp read_req_body(%{conn: conn, done: false}) do
-    case read_body(conn) do
-      {status, chunk, conn} when status in [:ok, :more] ->
-        {chunk, %{conn: conn, done: status == :ok}}
-      {:error, reason} -> raise ParseError, reason
-    end
-  end
-
-  defp read_req_body(%{conn: _, done: true} = continuation_state) do
-    {[], continuation_state}
-  end
-
-  defp handle_sax_event(:startDocument, _location, stack) do
-    [Parsers.LIST.new() | stack]
-  end
-
-  defp handle_sax_event(:endDocument, _location, stack) do
-    [%Parsers.LIST{buffer: [result]}] = stack
-    result
-  end
-
-  defp handle_sax_event({:startElement, _, element_name, _, attributes}, _location, stack) do
-    parser_type = @parsers[element_name]
-    if !parser_type, do: raise ParseError, "Unsupported element <#{element_name}>"
-    attributes = attributes
-                 |> Stream.map(fn {_, _, name, value} -> {name, value} end)
-                 |> Enum.into(%{})
-    [parser_type.new(attributes) | stack]
-  end
-
-  defp handle_sax_event({:endElement, _, element_name, _}, _location, stack) do
-    [peek | stack] = stack
-    parser_type = peek.__struct__
-    if parser_type != @parsers[element_name] do
-      start_element_name = parser_type |> to_string() |> String.split(".") |> List.last() |> String.downcase()
-      raise ParseError, "End element </#{element_name}> does not match start element <#{start_element_name}>"
-    end
-    case parser_type.parse(peek) do
-      {:ok, value, attributes} ->
-        [peek | stack] = stack
-        parser = peek.__struct__.update(peek, {value, attributes})
-        [parser | stack]
-      {:error, :invalid_format, str} ->
-        raise ParseError, "Invalid format: #{str}"
-    end
-  end
-
-  defp handle_sax_event({:characters, text}, _location, stack) do
-    [peek | stack] = stack
-    parser = peek.__struct__.update(peek, text)
-    [parser | stack]
-  end
-
-  defp handle_sax_event(_, _location, stack) do
-    stack
-  end
 end
