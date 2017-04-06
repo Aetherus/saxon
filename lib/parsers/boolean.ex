@@ -8,7 +8,7 @@ defmodule Saxon.Parsers.BOOLEAN do
   end
 
   def parse(%__MODULE__{buffer: buffer, attributes: attributes}) do
-    buffer = buffer |> to_string() |> String.trim()
+    buffer = buffer |> IO.iodata_to_binary() |> String.trim()
     case buffer do
       "true" -> {:ok, true, attributes}
       "false" -> {:ok, false, attributes}

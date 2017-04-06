@@ -83,7 +83,7 @@ defmodule Saxon.Sax do
 
   defp retrieve_attributes(chunk) do
     [tag | rest] = String.split(chunk, ~r/\s+/, parts: 2)
-    attributes = Regex.scan(~r/([\w-]+)="([^"]+)"/, to_string(rest))
+    attributes = Regex.scan(~r/([\w-]+)="([^"]+)"/, IO.iodata_to_binary(rest))
                  |> Stream.map(fn[_, name, value] -> {name, HtmlEntities.decode(value)} end)
                  |> Enum.into(%{})
     {tag, attributes}

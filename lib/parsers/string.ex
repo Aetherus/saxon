@@ -7,7 +7,7 @@ defmodule Saxon.Parsers.STRING do
   end
 
   def parse(%__MODULE__{buffer: buffer, attributes: attributes}) do
-    result = buffer |> to_string()
+    result = buffer |> IO.iodata_to_binary()
     {:ok, result, attributes}
   end
 end

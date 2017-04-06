@@ -8,14 +8,14 @@ defmodule SaxonTest do
 
     %{
       "article" => %{
-        "title" => "Elixir Rocks",
+        "title" => "Elixir 真牛！",
         "author_id" => 1,
         "published_at" => %DateTime{},
         "private" => false,
         "logo" => %Plug.Upload{filename: "logo.png", content_type: "image/png", path: path1},
         "sections" => [
           %{
-            "content" => "Elixir really rocks.",
+            "content" => "Elixir 真的很牛。",
             "photo" => %Plug.Upload{filename: "awesome.jpg", content_type: "image/jpeg", path: path2}
           },
           %{

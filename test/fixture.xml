@@ -1,6 +1,6 @@
 <map>
   <map name="article">
-    <string name="title">Elixir Rocks</string>
+    <string name="title">Elixir 真牛！</string>
     <integer name="author_id">1</integer>
     <timestamp name="published_at">2017-03-29T10:23:35Z</timestamp>
     <boolean name="private">false</boolean>
@@ -2057,7 +2057,7 @@
     </file>
     <list name="sections">
       <map>
-        <string name="content">Elixir really rocks.</string>
+        <string name="content">Elixir 真的很牛。</string>
         <file name="photo" filename="awesome.jpg" content-type="image/jpeg">
           /9j/4AAQSkZJRgABAQAAAQABAAD/4gKgSUNDX1BST0ZJTEUAAQEAAAKQbGNtcwQwAABtbnRyUkdC
           IFhZWiAH4AAEAAwAAgADADRhY3NwQVBQTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9tYAAQAA
