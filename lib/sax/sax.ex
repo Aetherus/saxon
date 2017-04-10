@@ -95,6 +95,7 @@ defmodule Saxon.Sax do
     end
   end
 
+  @compile {:inline, split_after: 2}
   defp split_after(str, chars) do
     split_after(chars, str, [], str)
   end
@@ -109,6 +110,7 @@ defmodule Saxon.Sax do
 
   defp split_after(_chars, "", _acc, original), do: original
 
+  @compile {:inline, split_before: 2}
   defp split_before(str, chars) do
     split_before(chars, str, [], str)
   end
