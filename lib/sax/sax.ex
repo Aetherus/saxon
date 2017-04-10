@@ -32,22 +32,22 @@ defmodule Saxon.Sax do
   end
 
   defp parse(<<"</", rest::binary>> = chunk, reducer, conn, state, has_more, opts) do
-    case String.split(rest, ">", parts: 2) do
-      [tag, rest] ->
+    case split_before(rest, '>') do
+      {tag, <<">", rest::binary>>} ->
         state = apply(reducer, :end_element, [tag, state])
         parse(rest, reducer, conn, state, has_more, opts)
-      [_broken_tag] ->
+      _broken_tag ->
         continue(conn, reducer, chunk, state, opts)
     end
   end
 
   defp parse(<<"<", rest::binary>> = chunk, reducer, conn, state, has_more, opts) do
-    case String.split(rest, ">", parts: 2) do
-      [tag, rest] ->
+    case split_before(rest, '>') do
+      {tag, <<">", rest::binary>>} ->
         {tag, attributes} = retrieve_attributes(tag)
         state = apply(reducer, :start_element, [tag, attributes, state])
         parse(rest, reducer, conn, state, has_more, opts)
-      [_broken_tag] ->
+      _broken_tag ->
         continue(conn, reducer, chunk, state, opts)
     end
   end
@@ -61,31 +61,65 @@ defmodule Saxon.Sax do
   end
 
   defp parse(<<"&", _::binary>> = chunk, reducer, conn, state, has_more, opts) do
-    case String.split(chunk, ~r/(?<=;)/, parts: 2) do
-      [html_entity, rest] ->
+    case split_after(chunk, ';') do
+      {html_entity, rest} ->
         state = apply(reducer, :characters, [HtmlEntities.decode(html_entity), state])
         parse(rest, reducer, conn, state, has_more, opts)
-      [_broken_entity] ->
+      _broken_entity ->
         continue(conn, reducer, chunk, state, opts)
     end
   end
 
   defp parse(chunk, reducer, conn, state, has_more, opts) do
-    case String.split(chunk, ~r/(?=[<&])/, parts: 2) do
-      [text, rest] ->
+    case split_before(chunk, '<&') do
+      {text, rest} ->
         state = apply(reducer, :characters, [text, state])
         parse(rest, reducer, conn, state, has_more, opts)
-      [text] ->
+      text ->
         state = apply(reducer, :characters, [text, state])
         continue(conn, reducer, "", state, opts)
     end
   end
 
   defp retrieve_attributes(chunk) do
-    [tag | rest] = String.split(chunk, ~r/\s+/, parts: 2)
-    attributes = Regex.scan(~r/([\w-]+)="([^"]+)"/, IO.iodata_to_binary(rest))
-                 |> Stream.map(fn[_, name, value] -> {name, HtmlEntities.decode(value)} end)
-                 |> Enum.into(%{})
-    {tag, attributes}
+    case split_before(chunk, ' ') do
+      {tag, ""} ->
+        {tag, %{}}
+      {tag, rest} ->
+        attributes = Regex.scan(~r/([\w-]+)="([^"]+)"/, IO.iodata_to_binary(rest))
+                     |> Stream.map(fn[_, name, value] -> {name, HtmlEntities.decode(value)} end)
+                     |> Enum.into(%{})
+        {tag, attributes}
+      tag ->
+        {tag, %{}}
+    end
   end
+
+  defp split_after(str, chars) do
+    split_after(chars, str, [], str)
+  end
+
+  defp split_after(chars, <<c, rest::binary>>, acc, original) do
+    if c in chars do
+      {IO.iodata_to_binary([acc, c]), rest}
+    else
+      split_after(chars, rest, [acc, c], original)
+    end
+  end
+
+  defp split_after(_chars, "", _acc, original), do: original
+
+  defp split_before(str, chars) do
+    split_before(chars, str, [], str)
+  end
+
+  defp split_before(chars, <<c, rest::binary>> = tail, acc, original) do
+    if c in chars do
+      {IO.iodata_to_binary(acc), tail}
+    else
+      split_before(chars, rest, [acc, c], original)
+    end
+  end
+
+  defp split_before(_chars, "", _acc, original), do: original
 end

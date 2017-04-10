@@ -9,7 +9,7 @@ defmodule SaxonTest do
     end)
 
     {:ok, params, _conn} = benchmark("Parse", fn ->
-      Saxon.parse(conn, "application", "vnd.saxon+xml", nil, [saxon_chunk_size: 16384])
+      Saxon.parse(conn, "application", "vnd.saxon+xml", nil, [saxon_chunk_size: nil])
     end)
 
     %{
