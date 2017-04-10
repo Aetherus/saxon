@@ -86,7 +86,7 @@ defmodule Saxon.Sax do
       {tag, ""} ->
         {tag, %{}}
       {tag, rest} ->
-        attributes = Regex.scan(~r/([\w-]+)="([^"]+)"/, IO.iodata_to_binary(rest))
+        attributes = Regex.scan(~r/([a-z][\w-]+\w)="([^"]+)"/, IO.iodata_to_binary(rest))
                      |> Stream.map(fn[_, name, value] -> {name, HtmlEntities.decode(value)} end)
                      |> Enum.into(%{})
         {tag, attributes}
