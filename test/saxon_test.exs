@@ -3,8 +3,14 @@ defmodule SaxonTest do
   doctest Saxon
 
   test "parse" do
-    conn = Plug.Test.conn(:post, "/", File.read!("test/fixture.xml"))
-    {:ok, params, _conn} = Saxon.parse(conn, "application", "vnd.saxon+xml", nil, nil)
+
+    conn = benchmark("Initialize", fn ->
+      Plug.Test.conn(:post, "/", File.read!("test/fixture.xml"))
+    end)
+
+    {:ok, params, _conn} = benchmark("Parse", fn ->
+      Saxon.parse(conn, "application", "vnd.saxon+xml", nil, [saxon_chunk_size: 16384])
+    end)
 
     %{
       "article" => %{
@@ -29,5 +35,15 @@ defmodule SaxonTest do
     assert File.exists? path1
     assert File.exists? path2
     assert File.exists? path3
+  end
+
+  defp benchmark(title, func) do
+    %{second: sec, microsecond: {msec, _}} = DateTime.utc_now()
+    bfr = sec * 1_000_000 + msec
+    result = func.()
+    %{second: sec, microsecond: {msec, _}} = DateTime.utc_now()
+    aftr = sec * 1_000_000 + msec
+    IO.puts "#{title}: #{aftr - bfr} microseconds"
+    result
   end
 end
